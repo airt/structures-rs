@@ -1,0 +1,11 @@
+[package]
+publish = false
+name = "structures"
+version = "0.0.0"
+authors = ["airt <airtial@gmail.com>"]
+license = "MIT/Apache-2.0"
+readme = "readme.md"
+repository = "https://github.com/airt/structures-rs"
+categories = ["data-structures"]
+keywords = ["data-structures"]
+description = ""
