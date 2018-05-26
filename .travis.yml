@@ -1,1 +1,13 @@
 language: rust
+
+before_deploy:
+  - cargo doc
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  target_branch: gh-pages
+  local_dir: target/doc
+  on:
+    branch: develop
