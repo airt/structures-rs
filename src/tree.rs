@@ -115,30 +115,29 @@ impl<T> Tree<T> {
 
 #[cfg(test)]
 mod tests {
+  use super::TraverseOrder::*;
+  use super::Tree;
+
   #[test]
   fn value() {
-    use super::Tree;
     assert_eq!(Tree::<()>::empty().value(), None);
     assert_eq!(Tree::leaf(1).value(), Some(&1));
   }
 
   #[test]
   fn left() {
-    use super::Tree;
     assert_eq!(Tree::<()>::empty().left(), None);
     assert_eq!(Tree::branch(1, new_tree(), Tree::empty()).left(), Some(&new_tree()));
   }
 
   #[test]
   fn right() {
-    use super::Tree;
     assert_eq!(Tree::<()>::empty().right(), None);
     assert_eq!(Tree::branch(1, Tree::empty(), new_tree()).right(), Some(&new_tree()));
   }
 
   #[test]
   fn iter() {
-    use super::TraverseOrder::*;
     let tree = new_tree();
     let h = |o| tree.iter(o).cloned().collect::<Vec<_>>();
     assert_eq!(h(InOrder), [4, 2, 5, 1, 6, 3, 7]);
@@ -148,7 +147,6 @@ mod tests {
 
   #[test]
   fn traverse() {
-    use super::TraverseOrder::*;
     let tree = new_tree();
     let h = |o| {
       let mut rs = vec![];
@@ -161,7 +159,6 @@ mod tests {
   }
 
   fn new_tree() -> super::Tree<i32> {
-    use super::Tree;
     Tree::branch(
       1,
       Tree::branch(

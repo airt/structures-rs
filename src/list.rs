@@ -73,9 +73,10 @@ impl<T: fmt::Debug> fmt::Debug for List<T> {
 
 #[cfg(test)]
 mod tests {
+  use super::List::*;
+
   #[test]
   fn macro_list() {
-    use super::List::*;
     assert_eq!(list![], Nil::<()>);
     assert_eq!(list![1], Cons(1, Box::new(Nil)));
     assert_eq!(list![1, 2], Cons(1, Box::new(Cons(2, Box::new(Nil)))));
@@ -83,7 +84,6 @@ mod tests {
 
   #[test]
   fn len() {
-    use super::List::*;
     assert_eq!(Nil::<()>.len(), 0);
     assert_eq!(list![1].len(), 1);
     assert_eq!(list![1, 2].len(), 2);
@@ -91,7 +91,6 @@ mod tests {
 
   #[test]
   fn is_empty() {
-    use super::List::*;
     assert!(Nil::<()>.is_empty());
     assert!(!list![1].is_empty());
     assert!(!list![1, 2].is_empty());
@@ -107,7 +106,6 @@ mod tests {
 
   #[test]
   fn fmt() {
-    use super::List::*;
     assert_eq!(format!("{:?}", Nil::<()>), "[]");
     assert_eq!(format!("{:?}", list![1]), "[1]");
     assert_eq!(format!("{:?}", list![1, 2]), "[1, 2]");
