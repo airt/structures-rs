@@ -14,6 +14,7 @@
 
 use std::cell::Ref;
 use std::cell::RefCell;
+use std::iter::FromIterator;
 use std::rc::Rc;
 use std::rc::Weak;
 
@@ -64,14 +65,41 @@ impl<T> DoublyList<T> {
     self.push_front_node(&Self::new_node(data));
   }
 
+  pub fn push_back(&mut self, data: T) {
+    self.push_back_node(&Self::new_node(data));
+  }
+
+  pub fn pop_front(&mut self) -> Option<T> {
+    Some(Node::unwrap_data(self.pop_front_node()?).unwrap())
+  }
+
   pub fn pop_back(&mut self) -> Option<T> {
     Some(Node::unwrap_data(self.pop_back_node()?).unwrap())
+  }
+
+  pub fn append(&mut self, other: &mut Self) {
+    while let Some(x) = other.pop_front() {
+      self.push_back(x)
+    }
   }
 }
 
 impl<T> DoublyList<T> {
   pub(crate) fn push_front_node(&self, node: &DoublyListNode<T>) {
     Node::attach(&self.begin, node);
+  }
+
+  pub(crate) fn push_back_node(&self, node: &DoublyListNode<T>) {
+    Node::attach(&Node::prev(&self.end), node);
+  }
+
+  pub(crate) fn pop_front_node(&self) -> Option<DoublyListNode<T>> {
+    if self.is_empty() {
+      return None;
+    }
+    let node = Node::next(&self.begin);
+    Node::detach(&node);
+    Some(node)
   }
 
   pub(crate) fn pop_back_node(&self) -> Option<DoublyListNode<T>> {
@@ -93,6 +121,47 @@ impl<T> DoublyList<T> {
 
   pub(crate) fn node_data(node: &DoublyListNode<T>) -> Ref<T> {
     Node::borrow_data(node)
+  }
+}
+
+impl<T> Extend<T> for DoublyList<T> {
+  fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+    for x in iter {
+      self.push_back(x)
+    }
+  }
+}
+
+impl<T> FromIterator<T> for DoublyList<T> {
+  fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+    let mut list = Self::new();
+    list.extend(iter);
+    list
+  }
+}
+
+pub struct IntoIter<T>(DoublyList<T>);
+
+impl<T> IntoIterator for DoublyList<T> {
+  type Item = T;
+  type IntoIter = IntoIter<T>;
+
+  fn into_iter(self) -> Self::IntoIter {
+    IntoIter(self)
+  }
+}
+
+impl<T> Iterator for IntoIter<T> {
+  type Item = T;
+
+  fn next(&mut self) -> Option<Self::Item> {
+    self.0.pop_front()
+  }
+}
+
+impl<T> DoubleEndedIterator for IntoIter<T> {
+  fn next_back(&mut self) -> Option<Self::Item> {
+    self.0.pop_back()
   }
 }
 
@@ -191,7 +260,7 @@ mod tests {
   }
 
   #[test]
-  fn push_pop() {
+  fn push_pop_1() {
     let mut list = DoublyList::new();
     assert_eq!(list.pop_back(), None);
     list.push_front(1);
@@ -199,6 +268,70 @@ mod tests {
     assert_eq!(list.pop_back(), Some(1));
     assert_eq!(list.pop_back(), Some(2));
     assert_eq!(list.pop_back(), None);
+  }
+
+  #[test]
+  fn push_pop_2() {
+    let mut list = DoublyList::new();
+    assert_eq!(list.pop_front(), None);
+    list.push_back(1);
+    list.push_back(2);
+    assert_eq!(list.pop_front(), Some(1));
+    assert_eq!(list.pop_front(), Some(2));
+    assert_eq!(list.pop_front(), None);
+  }
+
+  #[test]
+  fn from_iter() {
+    let mut list = [1, 2].iter().cloned().collect::<DoublyList<_>>();
+    assert_eq!(list.pop_front(), Some(1));
+    assert_eq!(list.pop_front(), Some(2));
+    assert_eq!(list.pop_front(), None);
+  }
+
+  #[test]
+  fn into_iter() {
+    let mut list = DoublyList::new();
+    list.push_back(1);
+    list.push_back(2);
+    let mut iter = list.into_iter();
+    assert_eq!(iter.next(), Some(1));
+    assert_eq!(iter.next(), Some(2));
+    assert_eq!(iter.next(), None);
+  }
+
+  #[test]
+  fn append() {
+    let mut list1 = DoublyList::new();
+    let mut list2 = DoublyList::new();
+    list1.push_back(1);
+    list1.push_back(2);
+    list1.push_back(3);
+    list2.push_back(4);
+    list2.push_back(5);
+    list2.push_back(6);
+    list1.append(&mut list2);
+    assert_eq!(list1.is_empty(), false);
+    assert_eq!(list1.len(), 6);
+    assert_eq!(list2.is_empty(), true);
+    assert_eq!(list2.len(), 0);
+    assert_eq!(list1.into_iter().collect::<Vec<_>>(), [1, 2, 3, 4, 5, 6]);
+  }
+
+  #[test]
+  fn extend() {
+    let mut list1 = DoublyList::new();
+    let mut list2 = DoublyList::new();
+    list1.push_back(1);
+    list1.push_back(2);
+    list1.push_back(3);
+    list2.push_back(4);
+    list2.push_back(5);
+    list2.push_back(6);
+    list1.extend(list2);
+    assert_eq!(list1.is_empty(), false);
+    assert_eq!(list1.len(), 6);
+    assert_eq!(list1.into_iter().collect::<Vec<_>>(), [1, 2, 3, 4, 5, 6]);
   }
 
   #[test]
