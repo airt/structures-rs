@@ -1,23 +1,22 @@
-//! Doubly Linked List
-//!
-//! # Examples
-//!
-//! ```
-//! use structures::doublylist::DoublyList;
-//!
-//! let mut list = DoublyList::new();
-//!
-//! list.push_front(1);
-//!
-//! assert_eq!(list.pop_back(), Some(1));
-//! ```
-
 use std::cell::Ref;
 use std::cell::RefCell;
 use std::iter::FromIterator;
 use std::rc::Rc;
 use std::rc::Weak;
 
+/// Doubly Linked List
+///
+/// # Examples
+///
+/// ```
+/// use structures::doublylist::DoublyList;
+///
+/// let mut list = DoublyList::new();
+///
+/// list.push_front(1);
+///
+/// assert_eq!(list.pop_back(), Some(1));
+/// ```
 pub struct DoublyList<T> {
   begin: DoublyListNode<T>,
   end: DoublyListNode<T>,

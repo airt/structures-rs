@@ -1,17 +1,16 @@
-//! Binary Tree
-//!
-//! # Examples
-//!
-//! ```
-//! use structures::tree::{TraverseOrder, Tree};
-//!
-//! let tree = Tree::branch(1, Tree::leaf(2), Tree::leaf(3));
-//!
-//! println!("{:#?}", tree);
-//!
-//! println!("{:?}", tree.iter(TraverseOrder::InOrder).collect::<Vec<_>>());
-//! ```
-
+/// Binary Tree
+///
+/// # Examples
+///
+/// ```
+/// use structures::tree::{TraverseOrder, Tree};
+///
+/// let tree = Tree::branch(1, Tree::leaf(2), Tree::leaf(3));
+///
+/// println!("{:#?}", tree);
+///
+/// println!("{:?}", tree.iter(TraverseOrder::InOrder).collect::<Vec<_>>());
+/// ```
 #[derive(Debug, PartialEq)]
 pub enum Tree<T> {
   Empty,

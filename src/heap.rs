@@ -1,21 +1,20 @@
-//! Max Heap
-//!
-//! # Examples
-//!
-//! ```
-//! use structures::heap::Heap;
-//!
-//! let mut heap = Heap::new();
-//!
-//! heap.push(2);
-//! heap.push(1);
-//! heap.push(3);
-//!
-//! assert_eq!(heap.pop(), Some(3));
-//! assert_eq!(heap.pop(), Some(2));
-//! assert_eq!(heap.pop(), Some(1));
-//! ```
-
+/// Max Heap
+///
+/// # Examples
+///
+/// ```
+/// use structures::heap::Heap;
+///
+/// let mut heap = Heap::new();
+///
+/// heap.push(2);
+/// heap.push(1);
+/// heap.push(3);
+///
+/// assert_eq!(heap.pop(), Some(3));
+/// assert_eq!(heap.pop(), Some(2));
+/// assert_eq!(heap.pop(), Some(1));
+/// ```
 pub struct Heap<T> {
   data: Vec<T>,
 }

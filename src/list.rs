@@ -1,18 +1,17 @@
-//! Linked List
-//!
-//! # Examples
-//!
-//! ```
-//! # #[macro_use] extern crate structures;
-//! # fn main() {
-//! let xs = list![1, 2, 3];
-//!
-//! println!("{:?}", xs);
-//! # }
-//! ```
-
 use std::fmt;
 
+/// Linked List
+///
+/// # Examples
+///
+/// ```
+/// # #[macro_use] extern crate structures;
+/// # fn main() {
+/// let xs = list![1, 2, 3];
+///
+/// println!("{:?}", xs);
+/// # }
+/// ```
 #[derive(PartialEq)]
 pub enum List<T> {
   Nil,
