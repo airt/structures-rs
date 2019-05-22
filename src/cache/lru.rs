@@ -1,6 +1,6 @@
-use cache::Cache;
-use doublylist::DoublyList;
-use doublylist::DoublyListNode;
+use crate::cache::Cache;
+use crate::doublylist::DoublyList;
+use crate::doublylist::DoublyListNode;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::mem;
