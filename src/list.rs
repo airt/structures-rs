@@ -48,9 +48,9 @@ impl<T> List<T> {
   }
 }
 
-pub struct Iter<'a, T: 'a>(&'a List<T>);
+pub struct Iter<'a, T>(&'a List<T>);
 
-impl<'a, T: 'a> Iterator for Iter<'a, T> {
+impl<'a, T> Iterator for Iter<'a, T> {
   type Item = &'a T;
 
   fn next(&mut self) -> Option<Self::Item> {
@@ -72,10 +72,11 @@ impl<T: fmt::Debug> fmt::Debug for List<T> {
 
 #[cfg(test)]
 mod tests {
-  use super::List::*;
+  use super::List;
 
   #[test]
-  fn macro_list() {
+  fn list_macro() {
+    use List::*;
     assert_eq!(list![], Nil::<()>);
     assert_eq!(list![1], Cons(1, Box::new(Nil)));
     assert_eq!(list![1, 2], Cons(1, Box::new(Cons(2, Box::new(Nil)))));
@@ -83,21 +84,21 @@ mod tests {
 
   #[test]
   fn len() {
-    assert_eq!(Nil::<()>.len(), 0);
+    assert_eq!((list![] as List<()>).len(), 0);
     assert_eq!(list![1].len(), 1);
     assert_eq!(list![1, 2].len(), 2);
   }
 
   #[test]
   fn is_empty() {
-    assert!(Nil::<()>.is_empty());
+    assert!((list![] as List<()>).is_empty());
     assert!(!list![1].is_empty());
     assert!(!list![1, 2].is_empty());
   }
 
   #[test]
   fn iter() {
-    let h = |xs: super::List<_>| xs.iter().cloned().collect::<Vec<_>>();
+    let h = |xs: List<_>| xs.iter().cloned().collect::<Vec<_>>();
     assert_eq!(h(list![]), []);
     assert_eq!(h(list![1]), [1]);
     assert_eq!(h(list![1, 2]), [1, 2]);
@@ -105,7 +106,7 @@ mod tests {
 
   #[test]
   fn fmt() {
-    assert_eq!(format!("{:?}", Nil::<()>), "[]");
+    assert_eq!(format!("{:?}", list![] as List<()>), "[]");
     assert_eq!(format!("{:?}", list![1]), "[1]");
     assert_eq!(format!("{:?}", list![1, 2]), "[1, 2]");
   }

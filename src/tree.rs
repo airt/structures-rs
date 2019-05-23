@@ -63,12 +63,12 @@ impl<T> Tree<T> {
   }
 }
 
-pub struct Iter<'a, T: 'a> {
+pub struct Iter<'a, T> {
   stack: Vec<IterState<'a, T>>,
   order: TraverseOrder,
 }
 
-enum IterState<'a, T: 'a> {
+enum IterState<'a, T> {
   T(&'a Tree<T>),
   V(&'a T),
 }
