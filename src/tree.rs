@@ -14,14 +14,7 @@
 #[derive(Debug, PartialEq)]
 pub enum Tree<T> {
   Empty,
-  Branch(T, Box<Tree<T>>, Box<Tree<T>>),
-}
-
-#[derive(Clone, Copy)]
-pub enum TraverseOrder {
-  InOrder,
-  PreOrder,
-  PostOrder,
+  Branch(T, Box<Self>, Box<Self>),
 }
 
 impl<T> Tree<T> {
@@ -35,13 +28,6 @@ impl<T> Tree<T> {
 
   pub fn branch(v: T, l: Self, r: Self) -> Self {
     Tree::Branch(v, Box::new(l), Box::new(r))
-  }
-
-  pub fn value(&self) -> Option<&T> {
-    match self {
-      Tree::Empty => None,
-      Tree::Branch(v, _, _) => Some(&v),
-    }
   }
 
   pub fn left(&self) -> Option<&Self> {
@@ -58,55 +44,91 @@ impl<T> Tree<T> {
     }
   }
 
-  pub fn iter(&self, order: TraverseOrder) -> Iter<T> {
-    Iter { stack: vec![IterState::T(self)], order }
+  pub fn value(&self) -> Option<&T> {
+    match self {
+      Tree::Empty => None,
+      Tree::Branch(v, _, _) => Some(&v),
+    }
   }
 }
 
-pub struct Iter<'a, T> {
-  stack: Vec<IterState<'a, T>>,
-  order: TraverseOrder,
+#[derive(Clone, Copy)]
+pub enum TraverseOrder {
+  InOrder,
+  PreOrder,
+  PostOrder,
 }
 
-enum IterState<'a, T> {
-  T(&'a Tree<T>),
-  V(&'a T),
-}
+mod iter {
+  use super::{TraverseOrder, Tree};
 
-impl<'a, T> Iterator for Iter<'a, T> {
-  type Item = &'a T;
+  pub struct Iter<'a, T> {
+    stack: Vec<IterState<'a, T>>,
+    order: TraverseOrder,
+  }
 
-  fn next(&mut self) -> Option<Self::Item> {
-    use self::{IterState::*, TraverseOrder::*, Tree::*};
-    let Iter { order, ref mut stack } = self;
-    while let Some(state) = stack.pop() {
-      match state {
-        V(v) => { return Some(v); }
-        T(Empty) => {}
-        T(Branch(v, l, r)) => {
-          if let PostOrder = order { stack.push(V(v)) }
-          stack.push(T(r));
-          if let InOrder = order { stack.push(V(v)) }
-          stack.push(T(l));
-          if let PreOrder = order { stack.push(V(v)) }
+  enum IterState<'a, T> {
+    T(&'a Tree<T>),
+    V(&'a T),
+  }
+
+  impl<'a, T> Iterator for Iter<'a, T> {
+    type Item = &'a T;
+    fn next(&mut self) -> Option<Self::Item> {
+      use {IterState::*, TraverseOrder::*, Tree::*};
+      let Iter { order, stack } = self;
+      while let Some(state) = stack.pop() {
+        match state {
+          V(v) => {
+            return Some(v);
+          }
+          T(Empty) => {}
+          T(Branch(v, l, r)) => {
+            if let PostOrder = order {
+              stack.push(V(v))
+            }
+            stack.push(T(r));
+            if let InOrder = order {
+              stack.push(V(v))
+            }
+            stack.push(T(l));
+            if let PreOrder = order {
+              stack.push(V(v))
+            }
+          }
         }
       }
+      None
     }
-    None
   }
-}
 
-impl<T> Tree<T> {
-  pub fn traverse(&self, order: TraverseOrder, f: &mut FnMut(&T)) {
-    use self::{TraverseOrder::*, Tree::*};
-    match self {
-      Empty => {}
-      Branch(ref v, l, r) => {
-        if let PreOrder = order { f(v) }
-        l.traverse(order, f);
-        if let InOrder = order { f(v) }
-        r.traverse(order, f);
-        if let PostOrder = order { f(v) }
+  impl<T> Tree<T> {
+    pub fn iter(&self, order: TraverseOrder) -> Iter<T> {
+      Iter {
+        stack: vec![IterState::T(self)],
+        order,
+      }
+    }
+  }
+
+  impl<T> Tree<T> {
+    pub fn traverse(&self, order: TraverseOrder, f: &mut FnMut(&T)) {
+      use {TraverseOrder::*, Tree::*};
+      match self {
+        Empty => {}
+        Branch(ref v, l, r) => {
+          if let PreOrder = order {
+            f(v)
+          }
+          l.traverse(order, f);
+          if let InOrder = order {
+            f(v)
+          }
+          r.traverse(order, f);
+          if let PostOrder = order {
+            f(v)
+          }
+        }
       }
     }
   }
@@ -114,14 +136,7 @@ impl<T> Tree<T> {
 
 #[cfg(test)]
 mod tests {
-  use super::TraverseOrder::*;
   use super::Tree;
-
-  #[test]
-  fn value() {
-    assert_eq!(Tree::<()>::empty().value(), None);
-    assert_eq!(Tree::leaf(1).value(), Some(&1));
-  }
 
   #[test]
   fn left() {
@@ -136,9 +151,15 @@ mod tests {
   }
 
   #[test]
+  fn value() {
+    assert_eq!(Tree::<()>::empty().value(), None);
+    assert_eq!(Tree::leaf(1).value(), Some(&1));
+  }
+
+  #[test]
   fn iter() {
-    let tree = new_tree();
-    let h = |o| tree.iter(o).cloned().collect::<Vec<_>>();
+    use super::TraverseOrder::*;
+    let h = |o| new_tree().iter(o).cloned().collect::<Vec<_>>();
     assert_eq!(h(InOrder), [4, 2, 5, 1, 6, 3, 7]);
     assert_eq!(h(PreOrder), [1, 2, 4, 5, 3, 6, 7]);
     assert_eq!(h(PostOrder), [4, 5, 2, 6, 7, 3, 1]);
@@ -146,10 +167,10 @@ mod tests {
 
   #[test]
   fn traverse() {
-    let tree = new_tree();
+    use super::TraverseOrder::*;
     let h = |o| {
       let mut rs = vec![];
-      tree.traverse(o, &mut |&x| rs.push(x));
+      new_tree().traverse(o, &mut |&x| rs.push(x));
       rs
     };
     assert_eq!(h(InOrder), [4, 2, 5, 1, 6, 3, 7]);
@@ -157,27 +178,7 @@ mod tests {
     assert_eq!(h(PostOrder), [4, 5, 2, 6, 7, 3, 1]);
   }
 
-  fn new_tree() -> super::Tree<i32> {
-    Tree::branch(
-      1,
-      Tree::branch(
-        2,
-        Tree::leaf(
-          4,
-        ),
-        Tree::leaf(
-          5,
-        ),
-      ),
-      Tree::branch(
-        3,
-        Tree::leaf(
-          6,
-        ),
-        Tree::leaf(
-          7,
-        ),
-      ),
-    )
+  fn new_tree() -> Tree<i32> {
+    Tree::branch(1, Tree::branch(2, Tree::leaf(4), Tree::leaf(5)), Tree::branch(3, Tree::leaf(6), Tree::leaf(7)))
   }
 }

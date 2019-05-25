@@ -55,7 +55,7 @@ impl Graph {
     self.data.iter().flat_map(|(x, t)| t.iter().map(move |(z, w)| (*x, *z, *w))).collect()
   }
 
-  pub fn get_weight(&self, source: Vertex, target: Vertex) -> Option<Weight> {
+  pub fn weight(&self, source: Vertex, target: Vertex) -> Option<Weight> {
     self.data.get(&source)?.get(&target).cloned()
   }
 
@@ -99,7 +99,7 @@ impl Graph {
       vertices_done.insert(u);
 
       for &v in self.vertices_outgoing_from(u).difference(&vertices_done) {
-        let new_weight = weights[&u] + self.get_weight(u, v).unwrap();
+        let new_weight = weights[&u] + self.weight(u, v).unwrap();
         if !weights.contains_key(&v) || weights[&v] > new_weight {
           weights.insert(v, new_weight);
           previous.insert(v, u);
@@ -201,14 +201,12 @@ mod tests {
 
   #[test]
   fn vertices() {
-    let graph = new_graph();
-    assert_eq!(graph.vertices(), vec![1, 2, 3, 4, 5, 6].into_iter().collect());
+    assert_eq!(new_graph().vertices(), vec![1, 2, 3, 4, 5, 6].into_iter().collect());
   }
 
   #[test]
   fn vertices_outgoing_from() {
-    let graph = new_graph();
-    assert_eq!(graph.vertices_outgoing_from(1), vec![2, 3, 6].into_iter().collect());
+    assert_eq!(new_graph().vertices_outgoing_from(1), vec![2, 3, 6].into_iter().collect());
   }
 
   #[test]
@@ -219,7 +217,6 @@ mod tests {
 
   #[test]
   fn shortest_path() {
-    let graph = new_graph();
     let paths = vec![
       (1, (0, vec![1])),
       (2, (7, vec![1, 2])),
@@ -228,17 +225,16 @@ mod tests {
       (5, (20, vec![1, 3, 6, 5])),
       (6, (11, vec![1, 3, 6])),
     ];
-    assert_eq!(graph.shortest_path(1, None), paths.into_iter().collect());
-    assert_eq!(graph.shortest_path(1, None).len(), graph.vertices().len());
-    assert_eq!(graph.shortest_path(1, Some(2)).len(), 1);
+    assert_eq!(new_graph().shortest_path(1, None), paths.into_iter().collect());
+    assert_eq!(new_graph().shortest_path(1, None).len(), new_graph().vertices().len());
+    assert_eq!(new_graph().shortest_path(1, Some(2)).len(), 1);
   }
 
   #[test]
   fn shortest_paths() {
-    let graph = new_graph();
     let ow = |m: HashMap<_, _>| m.into_iter().map(|(z, (w, _))| (z, w)).collect::<HashMap<_, _>>();
-    for (x, t) in graph.shortest_paths() {
-      assert_eq!(ow(graph.shortest_path(x, None)), ow(t));
+    for (x, t) in new_graph().shortest_paths() {
+      assert_eq!(ow(new_graph().shortest_path(x, None)), ow(t));
     }
   }
 

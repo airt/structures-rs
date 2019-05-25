@@ -19,23 +19,17 @@ pub struct Heap<T> {
   data: Vec<T>,
 }
 
-impl<T: Ord> Default for Heap<T> {
-  fn default() -> Self {
-    Self::new()
-  }
-}
-
 impl<T: Ord> Heap<T> {
   pub fn new() -> Self {
     Self { data: Vec::new() }
   }
 
-  pub fn len(&self) -> usize {
-    self.data.len()
-  }
-
   pub fn is_empty(&self) -> bool {
     self.data.is_empty()
+  }
+
+  pub fn len(&self) -> usize {
+    self.data.len()
   }
 
   pub fn peek(&self) -> Option<&T> {
@@ -68,6 +62,12 @@ impl<T: Ord> Heap<T> {
       self.sift_down_range(0, i);
     }
     self.data
+  }
+}
+
+impl<T: Ord> Default for Heap<T> {
+  fn default() -> Self {
+    Self::new()
   }
 }
 
