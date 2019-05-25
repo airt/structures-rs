@@ -10,15 +10,7 @@
 /// println!("{:?}", xs);
 /// ```
 #[derive(PartialEq)]
-pub struct List<T> {
-  head: Option<Box<Node<T>>>,
-}
-
-#[derive(PartialEq)]
-struct Node<T> {
-  next: Option<Box<Node<T>>>,
-  data: T,
-}
+pub struct List<T>(Option<(T, Box<Self>)>);
 
 #[macro_export]
 macro_rules! list {
@@ -29,38 +21,37 @@ macro_rules! list {
 
 impl<T> List<T> {
   pub fn nil() -> Self {
-    List { head: None }
+    List(None)
   }
 
-  pub fn cons(data: T, mut next: Self) -> Self {
-    let node = Node { data, next: next.head.take() };
-    List { head: Some(Box::new(node)) }
+  pub fn cons(x: T, xs: Self) -> Self {
+    List(Some((x, Box::new(xs))))
   }
 
   pub fn decons(mut self) -> Option<(T, Self)> {
-    self.head.take().map(|node| (node.data, List { head: node.next }))
+    self.0.take().map(|(x, xs)| (x, *xs))
   }
 
   pub fn is_empty(&self) -> bool {
-    self.head.is_none()
+    self.0.is_none()
   }
 
   pub fn len(&self) -> usize {
-    let mut len = 0;
-    let mut next = &self.head;
-    while let Some(node) = next {
-      next = &node.next;
-      len += 1;
+    let mut t = self;
+    let mut n = 0;
+    while let Some((_, xs)) = &t.0 {
+      t = &xs;
+      n += 1;
     }
-    len
+    n
   }
 }
 
 impl<T> Drop for List<T> {
   fn drop(&mut self) {
-    let mut next = self.head.take();
-    while let Some(mut node) = next {
-      next = node.next.take();
+    let mut t = self.0.take();
+    while let Some((_, mut xs)) = t {
+      t = xs.0.take();
     }
   }
 }
@@ -72,34 +63,34 @@ impl<T: std::fmt::Debug> std::fmt::Debug for List<T> {
 }
 
 mod iter {
-  use super::{List, Node};
+  use super::List;
 
-  pub struct Iter<'a, T>(&'a Option<Box<Node<T>>>);
+  pub struct Iter<'a, T>(&'a List<T>);
 
   impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
     fn next(&mut self) -> Option<Self::Item> {
-      self.0.as_ref().map(|node| {
-        self.0 = &node.next;
-        &node.data
+      (self.0).0.as_ref().map(|(x, xs)| {
+        self.0 = xs;
+        x
       })
     }
   }
 
   impl<T> List<T> {
     pub fn iter(&self) -> Iter<T> {
-      Iter(&self.head)
+      Iter(self)
     }
   }
 
-  pub struct IntoIter<T>(Option<Box<Node<T>>>);
+  pub struct IntoIter<T>(List<T>);
 
   impl<T> Iterator for IntoIter<T> {
     type Item = T;
     fn next(&mut self) -> Option<Self::Item> {
-      self.0.take().map(|node| {
-        self.0 = node.next;
-        node.data
+      (self.0).0.take().map(|(x, xs)| {
+        self.0 = *xs;
+        x
       })
     }
   }
@@ -107,8 +98,8 @@ mod iter {
   impl<T> IntoIterator for List<T> {
     type Item = T;
     type IntoIter = IntoIter<T>;
-    fn into_iter(mut self) -> Self::IntoIter {
-      IntoIter(self.head.take())
+    fn into_iter(self) -> Self::IntoIter {
+      IntoIter(self)
     }
   }
 }

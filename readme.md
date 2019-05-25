@@ -5,7 +5,7 @@
 
 - [Linked List](https://airt.github.io/structures-rs/structures/list/enum.List.html)
   / [src](src/list.rs)
-  / [tests](src/list.rs#L74)
+  / [tests](src/list.rs#L108)
 - [Doubly Linked List](https://airt.github.io/structures-rs/structures/doublylist/struct.DoublyList.html)
   / [src](src/doublylist.rs)
   / [tests](src/doublylist.rs#L211)
