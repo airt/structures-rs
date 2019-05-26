@@ -3,7 +3,7 @@
 [![Build Status][build-badge]][build-status]
 [![Rust Docs][docs-badge]][docs-url]
 
-- [Linked List](https://airt.github.io/structures-rs/structures/list/enum.List.html)
+- [Linked List](https://airt.github.io/structures-rs/structures/list/struct.List.html)
   / [src](src/list.rs)
   / [tests](src/list.rs#L108)
 - [Doubly Linked List](https://airt.github.io/structures-rs/structures/doublylist/struct.DoublyList.html)
