@@ -11,7 +11,7 @@
   / [tests](src/doublylist.rs#L211)
 - [Binary Tree](https://airt.github.io/structures-rs/structures/tree/enum.Tree.html)
   / [src](src/tree.rs)
-  / [tests](src/tree.rs#L138)
+  / [tests](src/tree.rs#L116)
 - [Max Heap](https://airt.github.io/structures-rs/structures/heap/struct.Heap.html)
   / [src](src/heap.rs)
   / [tests](src/heap.rs#L117)

@@ -50,38 +50,17 @@ impl<T> Tree<T> {
       Tree::Branch(v, _, _) => Some(&v),
     }
   }
-}
 
-#[derive(Clone, Copy)]
-pub enum TraverseOrder {
-  InOrder,
-  PreOrder,
-  PostOrder,
-}
-
-mod iter {
-  use super::{TraverseOrder, Tree};
-
-  pub struct Iter<'a, T> {
-    stack: Vec<IterState<'a, T>>,
-    order: TraverseOrder,
-  }
-
-  enum IterState<'a, T> {
-    T(&'a Tree<T>),
-    V(&'a T),
-  }
-
-  impl<'a, T> Iterator for Iter<'a, T> {
-    type Item = &'a T;
-    fn next(&mut self) -> Option<Self::Item> {
-      use {IterState::*, TraverseOrder::*, Tree::*};
-      let Iter { order, stack } = self;
+  pub fn iter(&self, order: TraverseOrder) -> impl Iterator<Item = &T> {
+    use {IterState::*, TraverseOrder::*, Tree::*};
+    enum IterState<'a, T> {
+      T(&'a Tree<T>),
+      V(&'a T),
+    }
+    let mut stack = vec![IterState::T(self)];
+    std::iter::from_fn(move || {
       while let Some(state) = stack.pop() {
         match state {
-          V(v) => {
-            return Some(v);
-          }
           T(Empty) => {}
           T(Branch(v, l, r)) => {
             if let PostOrder = order {
@@ -96,42 +75,41 @@ mod iter {
               stack.push(V(v))
             }
           }
+          V(v) => {
+            return Some(v);
+          }
         }
       }
       None
-    }
+    })
   }
 
-  impl<T> Tree<T> {
-    pub fn iter(&self, order: TraverseOrder) -> Iter<T> {
-      Iter {
-        stack: vec![IterState::T(self)],
-        order,
-      }
-    }
-  }
-
-  impl<T> Tree<T> {
-    pub fn traverse(&self, order: TraverseOrder, f: &mut FnMut(&T)) {
-      use {TraverseOrder::*, Tree::*};
-      match self {
-        Empty => {}
-        Branch(ref v, l, r) => {
-          if let PreOrder = order {
-            f(v)
-          }
-          l.traverse(order, f);
-          if let InOrder = order {
-            f(v)
-          }
-          r.traverse(order, f);
-          if let PostOrder = order {
-            f(v)
-          }
+  pub fn traverse(&self, order: TraverseOrder, f: &mut FnMut(&T)) {
+    use {TraverseOrder::*, Tree::*};
+    match self {
+      Empty => {}
+      Branch(ref v, l, r) => {
+        if let PreOrder = order {
+          f(v)
+        }
+        l.traverse(order, f);
+        if let InOrder = order {
+          f(v)
+        }
+        r.traverse(order, f);
+        if let PostOrder = order {
+          f(v)
         }
       }
     }
   }
+}
+
+#[derive(Clone, Copy)]
+pub enum TraverseOrder {
+  InOrder,
+  PreOrder,
+  PostOrder,
 }
 
 #[cfg(test)]
