@@ -37,9 +37,8 @@ impl<T> List<T> {
   }
 
   pub fn cons(data: T, next: &Self) -> Self {
-    List {
-      head: Some(Rc::new(Node { data, next: next.head.clone() })),
-    }
+    let node = Node { data, next: next.head.clone() };
+    List { head: Some(Rc::new(node)) }
   }
 
   pub fn decons(&self) -> Option<(&T, Self)> {
@@ -67,6 +66,16 @@ impl<T> List<T> {
     }
     len
   }
+
+  pub fn iter(&self) -> impl Iterator<Item = &T> {
+    let mut next = &self.head;
+    std::iter::from_fn(move || {
+      next.as_ref().map(|node| {
+        next = &node.next;
+        &node.data
+      })
+    })
+  }
 }
 
 impl<T> Drop for List<T> {
@@ -85,28 +94,6 @@ impl<T> Drop for List<T> {
 impl<T: std::fmt::Debug> std::fmt::Debug for List<T> {
   fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
     fmt.debug_list().entries(self.iter()).finish()
-  }
-}
-
-mod iter {
-  use super::{List, NodePtr};
-
-  pub struct Iter<'a, T>(&'a NodePtr<T>);
-
-  impl<'a, T> Iterator for Iter<'a, T> {
-    type Item = &'a T;
-    fn next(&mut self) -> Option<Self::Item> {
-      self.0.as_ref().map(|node| {
-        self.0 = &node.next;
-        &node.data
-      })
-    }
-  }
-
-  impl<T> List<T> {
-    pub fn iter(&self) -> Iter<T> {
-      Iter(&self.head)
-    }
   }
 }
 
