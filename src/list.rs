@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 /// Linked List
 ///
 /// # Examples
@@ -10,48 +12,72 @@
 /// println!("{:?}", xs);
 /// ```
 #[derive(PartialEq)]
-pub struct List<T>(Option<(T, Box<Self>)>);
+pub struct List<T> {
+  head: NodePtr<T>,
+}
+
+#[derive(PartialEq)]
+struct Node<T> {
+  next: NodePtr<T>,
+  data: T,
+}
+
+type NodePtr<T> = Option<Rc<Node<T>>>;
 
 #[macro_export]
 macro_rules! list {
   () => ($crate::list::List::nil());
-  ($x:expr) => ($crate::list::List::cons($x, list![]));
-  ($x:expr, $($xs:expr),*) => ($crate::list::List::cons($x, list![$($xs),*]));
+  ($x:expr) => ($crate::list::List::cons($x, &list![]));
+  ($x:expr, $($xs:expr),*) => ($crate::list::List::cons($x, &list![$($xs),*]));
 }
 
 impl<T> List<T> {
   pub fn nil() -> Self {
-    List(None)
+    List { head: None }
   }
 
-  pub fn cons(x: T, xs: Self) -> Self {
-    List(Some((x, Box::new(xs))))
+  pub fn cons(data: T, next: &Self) -> Self {
+    List {
+      head: Some(Rc::new(Node { data, next: next.head.clone() })),
+    }
   }
 
-  pub fn decons(mut self) -> Option<(T, Self)> {
-    self.0.take().map(|(x, xs)| (x, *xs))
+  pub fn decons(&self) -> Option<(&T, Self)> {
+    self.head.as_ref().map(|node| (&node.data, List { head: node.next.clone() }))
+  }
+
+  pub fn head(&self) -> Option<&T> {
+    self.head.as_ref().map(|node| &node.data)
+  }
+
+  pub fn tail(&self) -> Option<Self> {
+    self.head.as_ref().map(|node| List { head: node.next.clone() })
   }
 
   pub fn is_empty(&self) -> bool {
-    self.0.is_none()
+    self.head.is_none()
   }
 
   pub fn len(&self) -> usize {
-    let mut t = self;
-    let mut n = 0;
-    while let Some((_, xs)) = &t.0 {
-      t = &xs;
-      n += 1;
+    let mut next = &self.head;
+    let mut len = 0;
+    while let Some(node) = next {
+      next = &node.next;
+      len += 1;
     }
-    n
+    len
   }
 }
 
 impl<T> Drop for List<T> {
   fn drop(&mut self) {
-    let mut t = self.0.take();
-    while let Some((_, mut xs)) = t {
-      t = xs.0.take();
+    let mut next = self.head.take();
+    while let Some(node) = next {
+      if let Ok(mut node) = Rc::try_unwrap(node) {
+        next = node.next.take();
+      } else {
+        break;
+      }
     }
   }
 }
@@ -63,43 +89,23 @@ impl<T: std::fmt::Debug> std::fmt::Debug for List<T> {
 }
 
 mod iter {
-  use super::List;
+  use super::{List, NodePtr};
 
-  pub struct Iter<'a, T>(&'a List<T>);
+  pub struct Iter<'a, T>(&'a NodePtr<T>);
 
   impl<'a, T> Iterator for Iter<'a, T> {
     type Item = &'a T;
     fn next(&mut self) -> Option<Self::Item> {
-      (self.0).0.as_ref().map(|(x, xs)| {
-        self.0 = xs;
-        x
+      self.0.as_ref().map(|node| {
+        self.0 = &node.next;
+        &node.data
       })
     }
   }
 
   impl<T> List<T> {
     pub fn iter(&self) -> Iter<T> {
-      Iter(self)
-    }
-  }
-
-  pub struct IntoIter<T>(List<T>);
-
-  impl<T> Iterator for IntoIter<T> {
-    type Item = T;
-    fn next(&mut self) -> Option<Self::Item> {
-      (self.0).0.take().map(|(x, xs)| {
-        self.0 = *xs;
-        x
-      })
-    }
-  }
-
-  impl<T> IntoIterator for List<T> {
-    type Item = T;
-    type IntoIter = IntoIter<T>;
-    fn into_iter(self) -> Self::IntoIter {
-      IntoIter(self)
+      Iter(&self.head)
     }
   }
 }
@@ -109,17 +115,31 @@ mod tests {
   use super::List;
 
   #[test]
-  fn list_macro() {
+  fn macro_list() {
     assert_eq!(list![], List::<()>::nil());
-    assert_eq!(list![1], List::cons(1, List::nil()));
-    assert_eq!(list![1, 2], List::cons(1, List::cons(2, List::nil())));
+    assert_eq!(list![1], List::cons(1, &List::nil()));
+    assert_eq!(list![1, 2], List::cons(1, &List::cons(2, &List::nil())));
   }
 
   #[test]
   fn decons() {
     assert_eq!((list![] as List<()>).decons(), None);
-    assert_eq!(list![1].decons(), Some((1, list![])));
-    assert_eq!(list![1, 2].decons(), Some((1, list![2])));
+    assert_eq!(list![1].decons(), Some((&1, list![])));
+    assert_eq!(list![1, 2].decons(), Some((&1, list![2])));
+  }
+
+  #[test]
+  fn head() {
+    assert_eq!((list![] as List<()>).head(), None);
+    assert_eq!(list![1].head(), Some(&1));
+    assert_eq!(list![1, 2].head(), Some(&1));
+  }
+
+  #[test]
+  fn tail() {
+    assert_eq!((list![] as List<()>).tail(), None);
+    assert_eq!(list![1].tail(), Some(list![]));
+    assert_eq!(list![1, 2].tail(), Some(list![2]));
   }
 
   #[test]
@@ -146,14 +166,6 @@ mod tests {
   #[test]
   fn iter() {
     let h = |xs: List<_>| xs.iter().cloned().collect::<Vec<_>>();
-    assert_eq!(h(list![]), []);
-    assert_eq!(h(list![1]), [1]);
-    assert_eq!(h(list![1, 2]), [1, 2]);
-  }
-
-  #[test]
-  fn into_iter() {
-    let h = |xs: List<_>| xs.into_iter().collect::<Vec<_>>();
     assert_eq!(h(list![]), []);
     assert_eq!(h(list![1]), [1]);
     assert_eq!(h(list![1, 2]), [1, 2]);
