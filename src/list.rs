@@ -13,16 +13,14 @@ use std::rc::Rc;
 /// ```
 #[derive(PartialEq)]
 pub struct List<T> {
-  head: NodePtr<T>,
+  head: Option<Rc<Node<T>>>,
 }
 
 #[derive(PartialEq)]
 struct Node<T> {
-  next: NodePtr<T>,
+  next: Option<Rc<Node<T>>>,
   data: T,
 }
-
-type NodePtr<T> = Option<Rc<Node<T>>>;
 
 #[macro_export]
 macro_rules! list {
