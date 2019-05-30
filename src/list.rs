@@ -56,23 +56,11 @@ impl<T> List<T> {
   }
 
   pub fn len(&self) -> usize {
-    let mut next = &self.head;
-    let mut len = 0;
-    while let Some(node) = next {
-      next = &node.next;
-      len += 1;
-    }
-    len
+    self.iter().count()
   }
 
   pub fn iter(&self) -> impl Iterator<Item = &T> {
-    let mut next = &self.head;
-    std::iter::from_fn(move || {
-      next.as_ref().map(|node| {
-        next = &node.next;
-        &node.data
-      })
-    })
+    std::iter::successors(self.head.as_ref(), |node| node.next.as_ref()).map(|node| &node.data)
   }
 }
 
