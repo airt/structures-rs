@@ -84,7 +84,7 @@ impl<T> Tree<T> {
     })
   }
 
-  pub fn traverse(&self, order: TraverseOrder, f: &mut FnMut(&T)) {
+  pub fn traverse(&self, order: TraverseOrder, f: &mut dyn FnMut(&T)) {
     use {TraverseOrder::*, Tree::*};
     match self {
       Empty => {}
