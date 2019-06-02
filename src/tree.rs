@@ -88,7 +88,7 @@ impl<T> Tree<T> {
     use {TraverseOrder::*, Tree::*};
     match self {
       Empty => {}
-      Branch(ref v, l, r) => {
+      Branch(v, l, r) => {
         if let PreOrder = order {
           f(v)
         }
