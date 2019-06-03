@@ -1,4 +1,3 @@
-use crate::cache::Cache;
 use crate::doublylist::DoublyList;
 use crate::doublylist::DoublyListNode;
 use std::collections::HashMap;
@@ -26,21 +25,6 @@ pub struct LRU<K, V> {
   m: HashMap<Rc<K>, (DoublyListNode<Rc<K>>, V)>,
 }
 
-impl<K: Eq + Hash, V> Cache<K, V> for LRU<K, V> {
-  fn get(&mut self, key: &K) -> Option<&V> {
-    Some(self.get_mut(key)?)
-  }
-
-  fn set(&mut self, key: K, value: V) -> Option<V> {
-    if let Some(old_value) = self.get_mut(&key) {
-      return Some(mem::replace(old_value, value));
-    }
-    self.remove_old();
-    self.insert_new(key, value);
-    None
-  }
-}
-
 impl<K: Eq + Hash, V> LRU<K, V> {
   pub fn new(capacity: usize) -> Self {
     LRU {
@@ -63,6 +47,10 @@ impl<K: Eq + Hash, V> LRU<K, V> {
     self.m.len()
   }
 
+  fn get(&mut self, key: &K) -> Option<&V> {
+    Some(self.get_mut(key)?)
+  }
+
   pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
     let (node, value) = self.m.get_mut(key)?;
     refresh_node(node, &self.l);
@@ -71,6 +59,15 @@ impl<K: Eq + Hash, V> LRU<K, V> {
 
   pub fn get_without_refresh(&self, key: &K) -> Option<&V> {
     Some(&self.m.get(key)?.1)
+  }
+
+  fn set(&mut self, key: K, value: V) -> Option<V> {
+    if let Some(old_value) = self.get_mut(&key) {
+      return Some(mem::replace(old_value, value));
+    }
+    self.remove_old();
+    self.insert_new(key, value);
+    None
   }
 }
 
@@ -99,7 +96,6 @@ fn refresh_node<T>(node: &DoublyListNode<T>, list: &DoublyList<T>) {
 
 #[cfg(test)]
 mod tests {
-  use super::Cache;
   use super::LRU;
 
   #[test]
