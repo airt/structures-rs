@@ -8,7 +8,7 @@
   / [tests](src/list.rs#L87)
 - [Doubly Linked List](https://airt.github.io/structures-rs/structures/doublylist/struct.DoublyList.html)
   / [src](src/doublylist.rs)
-  / [tests](src/doublylist.rs#L211)
+  / [tests](src/doublylist.rs#L208)
 - [Binary Tree](https://airt.github.io/structures-rs/structures/tree/enum.Tree.html)
   / [src](src/tree.rs)
   / [tests](src/tree.rs#L116)
