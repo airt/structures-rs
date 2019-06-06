@@ -18,9 +18,9 @@
 - [Directed Graph](https://airt.github.io/structures-rs/structures/graph/struct.Graph.html)
   / [src](src/graph.rs)
   / [tests](src/graph.rs#L199)
-- [LRU Cache](https://airt.github.io/structures-rs/structures/lru/struct.LRU.html)
+- [LRU Cache](https://airt.github.io/structures-rs/structures/lru/struct.LruCache.html)
   / [src](src/lru.rs)
-  / [tests](src/lru.rs#L999)
+  / [tests](src/lru.rs#L94)
 
 [build-badge]: https://img.shields.io/travis/airt/structures-rs.svg
 [build-status]: https://travis-ci.org/airt/structures-rs
