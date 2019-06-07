@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["Graph","Directed Graph"]],"type":[["Edge",""],["Edges",""],["Path",""],["Vertex",""],["Vertices",""],["Weight",""]]});

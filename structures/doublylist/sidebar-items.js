@@ -1,0 +1,1 @@
+initSidebarItems({"struct":[["DoublyList","Doubly Linked List"],["IntoIter",""]]});
